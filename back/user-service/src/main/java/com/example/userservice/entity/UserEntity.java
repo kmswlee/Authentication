@@ -11,24 +11,22 @@ import java.time.LocalDate;
 @Table(name = "users")
 public class UserEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long Id;
-
-    @Column(nullable = false, unique = true)
-    private String email;
-    @Column
-    private String userName;
-    @Column(nullable = false, unique = true)
-    private String encryptedPwd;
-    @Column(nullable = false, unique = true)
     private String userId;
-
+    @Column(nullable = false)
+    private String email;
+    @Column(nullable = false)
+    private String userName;
+    @Column(nullable = false)
+    private String encryptedPwd;
+    @Column
+    private String refreshToken;
+    @Column // 1 : admin, 2 : user, 3 : secession
+    private Integer state;
     @Column(nullable = false, updatable = false, insertable = false)
     @ColumnDefault(value = "CURRENT_TIMESTAMP")
     private LocalDate createdAt;
-
     @Column(nullable = true, updatable = true, insertable = true)
     private LocalDate modifiedAt;
     @Column(nullable = true, updatable = true, insertable = true)
-    private LocalDate deletedAt;
+    private LocalDate deleteAt;
 }

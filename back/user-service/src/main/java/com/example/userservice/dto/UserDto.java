@@ -10,6 +10,9 @@ public class UserDto {
     private String password;
     private String encryptedPwd;
     private String email;
+    private String accessToken;
+    private String refreshToken;
+    private Integer state;
     private LocalDate createdAt;
     private LocalDate modifiedAt;
     private LocalDate deletedAt;

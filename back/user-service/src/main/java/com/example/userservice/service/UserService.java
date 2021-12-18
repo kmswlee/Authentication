@@ -7,4 +7,6 @@ public interface UserService {
     void deleteByUserId(String userId);
     UserDto getUserByUserId(String userId);
     void updateUser(UserDto userDto,UserDto requestDto);
+    UserDto getUserByUserEmail(String email);
+    UserDto addJwt(UserDto userDto);
 }
