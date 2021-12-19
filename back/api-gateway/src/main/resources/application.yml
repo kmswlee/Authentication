@@ -43,14 +43,37 @@ spring:
           uri: lb://USER-SERVICE
           predicates:
             - Path=/user-service/login
-            - Method=POST,GET
+            - Method=POST
           filters:
             - RewritePath=/user-service/(?<segment>.*), /$\{segment}
         - id: user-service
           uri: lb://USER-SERVICE
           predicates:
-            - Path=/user-service/test/**
-            - Method=POST,GET
+            - Path=/user-service/users/**
+            - Method=POST,GET,DELETE,PUT
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - AuthenticationFilter
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/token/refresh/**
+            - Method=GET
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/admin/users
+            - Method=GET
+          filters:
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - AuthenticationFilter
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/amdin/**
+            - Method=DELETE
           filters:
             - RewritePath=/user-service/(?<segment>.*), /$\{segment}
             - AuthenticationFilter
