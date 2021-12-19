@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService{
         UserEntity userEntity = userRepository.findByUserId(userId);
         UserDto userDto = modelMapper.map(userEntity,UserDto.class);
         userDto.setState(3);
-        userDto.setDeletedAt(localDate);
+        userDto.setDeleteAt(localDate);
         userEntity = modelMapper.map(userDto,UserEntity.class);
         userRepository.save(userEntity);
     }
@@ -136,7 +136,7 @@ public class UserServiceImpl implements UserService{
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         UserEntity userEntity = userRepository.findByEmail(email);
         UserDto userDto = modelMapper.map(userEntity,UserDto.class);
-        if (userDto.getState() == 3 || !bCryptPasswordEncoder.matches(password,userDto.getPassword())){
+        if (userDto.getState() == 3 || !bCryptPasswordEncoder.matches(password,userDto.getEncryptedPwd())){
             return false;
         }
         return true;

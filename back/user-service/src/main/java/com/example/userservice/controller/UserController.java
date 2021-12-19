@@ -5,12 +5,14 @@ import com.example.userservice.entity.UserEntity;
 import com.example.userservice.jwts.JwtToken;
 import com.example.userservice.service.UserService;
 import com.example.userservice.vo.RequestLogin;
+import com.example.userservice.vo.RequestModify;
 import com.example.userservice.vo.RequestUser;
 import com.example.userservice.vo.ResponseUser;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +54,7 @@ public class UserController {
     /* 회원정보 수정 */
     @PutMapping("/users/{userId}")
     public ResponseEntity<ResponseUser> updateUser(@PathVariable("userId") String userId,
-                                                   @RequestBody @Valid RequestUser requestUser) {
+                                                   @RequestBody @Valid RequestModify requestUser) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         UserDto userDto = modelMapper.map(userService.getUserByUserId(userId),UserDto.class);
@@ -71,8 +73,9 @@ public class UserController {
         if (userService.requestLogin(requestLogin.getEmail(), requestLogin.getPassword())) {
             response.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, PUT");
             response.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With,observe");
-            response.setHeader("Access-Control-Expose-Headers","userId,AccessToken,RefreshToken");
+            response.setHeader("Access-Control-Expose-Headers","userId,AccessToken,RefreshToken,Authorization");
             UserDto userDto = userService.addJwt(requestLogin.getEmail());
+            response.addHeader("Authorization", HttpHeaders.AUTHORIZATION);
             response.addHeader("userId",userDto.getUserId());
             response.addHeader("AccessToken",userDto.getAccessToken());
             response.addHeader("RefreshToken",userDto.getRefreshToken());
@@ -81,6 +84,7 @@ public class UserController {
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
 
     /* 토큰 재발행 */
     @GetMapping("/token/refresh/{email}")

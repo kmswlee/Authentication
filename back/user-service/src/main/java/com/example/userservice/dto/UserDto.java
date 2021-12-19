@@ -15,5 +15,5 @@ public class UserDto {
     private Integer state;
     private LocalDate createdAt;
     private LocalDate modifiedAt;
-    private LocalDate deletedAt;
+    private LocalDate deleteAt;
 }
