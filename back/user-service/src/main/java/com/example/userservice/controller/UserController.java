@@ -1,6 +1,7 @@
 package com.example.userservice.controller;
 
 import com.example.userservice.dto.UserDto;
+import com.example.userservice.entity.UserEntity;
 import com.example.userservice.jwts.JwtToken;
 import com.example.userservice.service.UserService;
 import com.example.userservice.vo.RequestLogin;
@@ -9,10 +10,14 @@ import com.example.userservice.vo.ResponseUser;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/")
@@ -26,12 +31,12 @@ public class UserController {
     }
     /* 회원가입 */
     @PostMapping("/users")
-    public ResponseEntity<ResponseUser> createUser(@RequestBody RequestUser user) {
+    public ResponseEntity<ResponseUser> createUser(@RequestBody @Valid RequestUser user) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT); // 매칭 설정
         UserDto userDto = modelMapper.map(user, UserDto.class);
         userDto = userService.createUser(userDto);
-        if (userDto.getState() == 4){
+        if (userDto.getState() == 3){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         ResponseUser responseUser = modelMapper.map(userDto,ResponseUser.class);
@@ -47,7 +52,7 @@ public class UserController {
     /* 회원정보 수정 */
     @PutMapping("/users/{userId}")
     public ResponseEntity<ResponseUser> updateUser(@PathVariable("userId") String userId,
-                                                   @RequestBody RequestUser requestUser) {
+                                                   @RequestBody @Valid RequestUser requestUser) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         UserDto userDto = modelMapper.map(userService.getUserByUserId(userId),UserDto.class);
@@ -59,7 +64,7 @@ public class UserController {
 
     /* 로그인 */
     @PostMapping("/login")
-    public ResponseEntity<ResponseUser> login(@RequestBody RequestLogin requestLogin,
+    public ResponseEntity<ResponseUser> login(@RequestBody @Valid RequestLogin requestLogin,
                                               HttpServletResponse response) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
@@ -76,6 +81,7 @@ public class UserController {
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
     /* 토큰 재발행 */
     @GetMapping("/token/refresh/{email}")
     public ResponseEntity<ResponseUser> refreshToken(@PathVariable("email") String email, HttpServletResponse response) {
@@ -88,12 +94,22 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(responseUser);
     }
 
-    @GetMapping("/test/{userId}")
-    public ResponseEntity<ResponseUser> test(@PathVariable("userId") String userId) {
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        UserDto userDto = modelMapper.map(userService.getUserByUserId(userId),UserDto.class);
-        ResponseUser responseUser = modelMapper.map(userDto,ResponseUser.class);
-        return ResponseEntity.status(HttpStatus.OK).body(responseUser);
+    /* admin 유저 목록 페이지 */
+    @GetMapping("/admin/users")
+    public ResponseEntity<List<ResponseUser>> adminMain(Pageable pageable) {
+        Iterable<UserEntity> usersList = userService.getUserByAll(pageable);
+        List<ResponseUser> responseUsersList = new ArrayList<>();
+
+        usersList.forEach(v -> {
+            responseUsersList.add(new ModelMapper().map(v, ResponseUser.class));
+        });
+
+        return ResponseEntity.status(HttpStatus.OK).body(responseUsersList);
+    }
+
+    /* admin 강퇴 */
+    @DeleteMapping("/admin/{userId}")
+    public void deleteByAdmin(@PathVariable("userId") String userId){
+        userService.deleteByUserId(userId);
     }
 }

@@ -2,7 +2,6 @@ package com.example.userservice.entity;
 
 import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
-
 import javax.persistence.*;
 import java.time.LocalDate;
 
@@ -20,7 +19,7 @@ public class UserEntity {
     private String encryptedPwd;
     @Column
     private String refreshToken;
-    @Column // 1 : admin, 2 : user, 3 : secession
+    @Column // 1 : admin, 2 : user, 3 : secession, used email
     private Integer state;
     @Column(nullable = false, updatable = false, insertable = false)
     @ColumnDefault(value = "CURRENT_TIMESTAMP")

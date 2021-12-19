@@ -11,11 +11,11 @@ import io.jsonwebtoken.Jwts;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Date;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -48,6 +48,11 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public Iterable<UserEntity> getUserByAll(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    @Override
     public UserDto createUser(UserDto userDto) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
@@ -60,7 +65,7 @@ public class UserServiceImpl implements UserService{
             userRepository.save(userEntity);
             return userDto;
         }
-        userDto.setState(4);
+        userDto.setState(3);
         return userDto;
     }
 
