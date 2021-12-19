@@ -63,31 +63,31 @@ public class UserController {
                                               HttpServletResponse response) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        UserDto userDto = modelMapper.map(userService.getUserByUserEmail(requestLogin.getEmail()),UserDto.class);
-        if (userDto.getState() == 3) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        if (userService.requestLogin(requestLogin.getEmail(), requestLogin.getPassword())) {
+            response.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, PUT");
+            response.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With,observe");
+            response.setHeader("Access-Control-Expose-Headers","userId,AccessToken,RefreshToken");
+            UserDto userDto = userService.addJwt(requestLogin.getEmail());
+            response.addHeader("userId",userDto.getUserId());
+            response.addHeader("AccessToken",userDto.getAccessToken());
+            response.addHeader("RefreshToken",userDto.getRefreshToken());
+            ResponseUser responseUser = modelMapper.map(userDto,ResponseUser.class);
+            return ResponseEntity.status(HttpStatus.OK).body(responseUser);
         }
-        response.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, PUT");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With,observe");
-        response.setHeader("Access-Control-Expose-Headers","userId,AccessToken,RefreshToken");
-        userDto = userService.addJwt(userDto);
-        response.addHeader("userId",userDto.getUserId());
-        response.addHeader("AccessToken",userDto.getAccessToken());
-        response.addHeader("RefreshToken",userDto.getRefreshToken());
-        ResponseUser responseUser = modelMapper.map(userDto,ResponseUser.class);
-        return ResponseEntity.status(HttpStatus.OK).body(responseUser);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
-    @GetMapping("/token/refresh/{userId}")
-    public ResponseEntity<ResponseUser> refreshToken(@PathVariable("userId") String userId, HttpServletResponse response) {
+    /* 토큰 재발행 */
+    @GetMapping("/token/refresh/{email}")
+    public ResponseEntity<ResponseUser> refreshToken(@PathVariable("email") String email, HttpServletResponse response) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        UserDto userDto = modelMapper.map(userService.getUserByUserId(userId),UserDto.class);
-        userDto = userService.addJwt(userDto);
+        UserDto userDto = userService.addJwt(email);
         response.addHeader("AccessToken", userDto.getAccessToken());
         response.addHeader("RefreshToken",userDto.getRefreshToken());
         ResponseUser responseUser = modelMapper.map(userDto,ResponseUser.class);
         return ResponseEntity.status(HttpStatus.OK).body(responseUser);
     }
+
     @GetMapping("/test/{userId}")
     public ResponseEntity<ResponseUser> test(@PathVariable("userId") String userId) {
         ModelMapper modelMapper = new ModelMapper();

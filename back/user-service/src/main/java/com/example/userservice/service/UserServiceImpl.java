@@ -110,10 +110,10 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserDto addJwt(UserDto userDto) {
+    public UserDto addJwt(String email) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        userDto = modelMapper.map(userRepository.findByEmail(userDto.getEmail()),UserDto.class);
+        UserDto userDto = modelMapper.map(userRepository.findByEmail(email),UserDto.class);
         String accessToken = jwtToken.createToken(userDto.getUserId());
         if(userDto.getRefreshToken() == null || !isValidRefresh(userDto.getRefreshToken())) {
             String refreshToken = jwtToken.createRefreshToken(userDto.getUserId());
@@ -125,4 +125,15 @@ public class UserServiceImpl implements UserService{
         return userDto;
     }
 
+    @Override
+    public boolean requestLogin(String email,String password) {
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        UserEntity userEntity = userRepository.findByEmail(email);
+        UserDto userDto = modelMapper.map(userEntity,UserDto.class);
+        if (userDto.getState() == 3 || !bCryptPasswordEncoder.matches(password,userDto.getPassword())){
+            return false;
+        }
+        return true;
+    }
 }

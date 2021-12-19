@@ -8,5 +8,6 @@ public interface UserService {
     UserDto getUserByUserId(String userId);
     void updateUser(UserDto userDto,UserDto requestDto);
     UserDto getUserByUserEmail(String email);
-    UserDto addJwt(UserDto userDto);
+    UserDto addJwt(String email);
+    boolean requestLogin(String email,String password);
 }
