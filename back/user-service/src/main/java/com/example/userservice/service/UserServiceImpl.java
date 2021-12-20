@@ -91,6 +91,20 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public void deleteByEmail(String email) {
+        Date date = new Date();
+        LocalDate localDate = new java.sql.Date(date.getTime()).toLocalDate();
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        UserEntity userEntity = userRepository.findByEmail(email);
+        UserDto userDto = modelMapper.map(userEntity,UserDto.class);
+        userDto.setState(3);
+        userDto.setDeleteAt(localDate);
+        userEntity = modelMapper.map(userDto,UserEntity.class);
+        userRepository.save(userEntity);
+    }
+
+    @Override
     public UserDto getUserByUserId(String userId) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
@@ -100,15 +114,15 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void updateUser(UserDto userDto, UserDto requestDto) {
+    public void updateUser(UserDto requestDto) {
         Date date = new Date();
         LocalDate localDate = new java.sql.Date(date.getTime()).toLocalDate();
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        userDto.setUserName(requestDto.getUserName());
-        userDto.setPassword(bCryptPasswordEncoder.encode(requestDto.getPassword()));
-        userDto.setModifiedAt(localDate);
-        UserEntity userEntity = modelMapper.map(userDto,UserEntity.class);
+        UserDto updateDto = modelMapper.map(requestDto,UserDto.class);
+        updateDto.setEncryptedPwd(bCryptPasswordEncoder.encode(requestDto.getPassword()));
+        updateDto.setModifiedAt(localDate);
+        UserEntity userEntity = modelMapper.map(updateDto,UserEntity.class);
         userRepository.save(userEntity);
     }
 
@@ -151,7 +165,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public void sendEmail(EmailDto emailDto) {
-        final String fromMail = "sgssgmanager@gamil.com";
+        final String fromMail = "sgssgmanager@gmail.com";
         final String fromName = "streaminggatemanager";
         final String password = "streamingsgs!";
         Properties prop = new Properties();
@@ -196,7 +210,7 @@ public class UserServiceImpl implements UserService{
     public void updatePassword(UserDto userDto, EmailDto emailDto){
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        userDto.setPassword(emailDto.getRandomPassword());
+        userDto.setEncryptedPwd(bCryptPasswordEncoder.encode(emailDto.getRandomPassword()));
         UserEntity userEntity = mapper.map(userDto,UserEntity.class);
         userRepository.save(userEntity);
     }

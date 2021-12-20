@@ -59,10 +59,9 @@ public class UserController {
                                                    @RequestBody @Valid RequestModify requestUser) {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        UserDto userDto = modelMapper.map(userService.getUserByUserId(userId),UserDto.class);
         UserDto requestDto = modelMapper.map(requestUser,UserDto.class);
-        userService.updateUser(userDto,requestDto);
-        ResponseUser responseUser = modelMapper.map(userDto,ResponseUser.class);
+        userService.updateUser(requestDto);
+        ResponseUser responseUser = modelMapper.map(requestDto,ResponseUser.class);
         return ResponseEntity.status(HttpStatus.OK).body(responseUser);
     }
 
@@ -101,17 +100,17 @@ public class UserController {
     }
 
     /* 비밀번호 찾기(임시 비밀번호 발행) */
-    @GetMapping("/users/find/password")
-    public ResponseEntity findPassword(@RequestParam(value = "userEmail") String userEmail,
+    @GetMapping("/find/password")
+    public ResponseEntity findPassword(@RequestParam(value = "email") String email,
                                        @RequestParam(value = "userName") String userName) {
-        boolean checkUser= userService.findPassword(userEmail,userName);
+        boolean checkUser= userService.findPassword(email,userName);
         if (!checkUser) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         String randomNum = RandomStringUtils.randomAlphanumeric(10);
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        UserDto userDto = mapper.map(userService.getUserByUserEmail(userEmail),UserDto.class);
+        UserDto userDto = mapper.map(userService.getUserByUserEmail(email),UserDto.class);
         EmailDto emailDto = mapper.map(userDto,EmailDto.class);
         emailDto.setRandomPassword(randomNum);
         userService.updatePassword(userDto,emailDto);
@@ -127,7 +126,9 @@ public class UserController {
         List<ResponseUser> responseUsersList = new ArrayList<>();
 
         usersList.forEach(v -> {
-            responseUsersList.add(new ModelMapper().map(v, ResponseUser.class));
+            if(v.getState() == 2){
+                responseUsersList.add(new ModelMapper().map(v, ResponseUser.class));
+            }
         });
 
         return ResponseEntity.status(HttpStatus.OK).body(responseUsersList);

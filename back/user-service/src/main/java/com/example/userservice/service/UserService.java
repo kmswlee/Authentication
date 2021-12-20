@@ -9,8 +9,9 @@ public interface UserService {
     Iterable<UserEntity> getUserByAll(Pageable pageable);
     UserDto createUser(UserDto userDto);
     void deleteByUserId(String userId);
+    void deleteByEmail(String email);
     UserDto getUserByUserId(String userId);
-    void updateUser(UserDto userDto,UserDto requestDto);
+    void updateUser(UserDto requestDto);
     UserDto getUserByUserEmail(String email);
     UserDto addJwt(String email);
     boolean requestLogin(String email,String password);
