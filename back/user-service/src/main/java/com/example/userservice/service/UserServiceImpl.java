@@ -1,5 +1,6 @@
 package com.example.userservice.service;
 
+import com.example.userservice.dto.EmailDto;
 import com.example.userservice.dto.UserDto;
 import com.example.userservice.entity.UserEntity;
 import com.example.userservice.jpa.UserRepository;
@@ -14,8 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeUtility;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.Properties;
 import java.util.UUID;
 
 @Service
@@ -140,5 +147,57 @@ public class UserServiceImpl implements UserService{
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void sendEmail(EmailDto emailDto) {
+        final String fromMail = "sgssgmanager@gamil.com";
+        final String fromName = "streaminggatemanager";
+        final String password = "streamingsgs!";
+        Properties prop = new Properties();
+        prop.put("mail.smtp.host", "smtp.gmail.com");
+        prop.put("mail.smtp.port", "587");
+        prop.put("mail.smtp.auth", "true");
+        prop.put("mail.smtp.starttls.enable", "true");
+        prop.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        prop.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+        Session session = Session.getInstance(prop, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(fromMail, password);
+            }
+        });
+        try {
+            emailDto.setRandomPassword(emailDto.getRandomPassword());
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(fromMail, MimeUtility.encodeText(fromName, "UTF-8", "B")));
+            message.setRecipients(
+                    Message.RecipientType.TO,
+                    InternetAddress.parse(emailDto.getEmail())
+            );
+            message.setSubject("임시 비밀번호입니다.");
+            message.setText(emailDto.toString());
+            Transport t = session.getTransport("smtp");
+            t.connect(fromMail, password);
+            t.sendMessage(message, message.getAllRecipients());
+            t.close();
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
+    @Override
+    public boolean findPassword(String email,String userName) {
+        UserEntity userEntity = userRepository.findByEmailAndUserName(email,userName);
+        if (userEntity == null)
+            return false;
+        return true;
+    }
+
+    @Override
+    public void updatePassword(UserDto userDto, EmailDto emailDto){
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        userDto.setPassword(emailDto.getRandomPassword());
+        UserEntity userEntity = mapper.map(userDto,UserEntity.class);
+        userRepository.save(userEntity);
     }
 }

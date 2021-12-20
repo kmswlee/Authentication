@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.EmailDto;
 import com.example.userservice.dto.UserDto;
 import com.example.userservice.entity.UserEntity;
 import com.example.userservice.jwts.JwtToken;
@@ -8,6 +9,7 @@ import com.example.userservice.vo.RequestLogin;
 import com.example.userservice.vo.RequestModify;
 import com.example.userservice.vo.RequestUser;
 import com.example.userservice.vo.ResponseUser;
+import org.apache.commons.lang.RandomStringUtils;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,6 +98,26 @@ public class UserController {
         response.addHeader("RefreshToken",userDto.getRefreshToken());
         ResponseUser responseUser = modelMapper.map(userDto,ResponseUser.class);
         return ResponseEntity.status(HttpStatus.OK).body(responseUser);
+    }
+
+    /* 비밀번호 찾기(임시 비밀번호 발행) */
+    @GetMapping("/users/find/password")
+    public ResponseEntity findPassword(@RequestParam(value = "userEmail") String userEmail,
+                                       @RequestParam(value = "userName") String userName) {
+        boolean checkUser= userService.findPassword(userEmail,userName);
+        if (!checkUser) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        String randomNum = RandomStringUtils.randomAlphanumeric(10);
+        ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        UserDto userDto = mapper.map(userService.getUserByUserEmail(userEmail),UserDto.class);
+        EmailDto emailDto = mapper.map(userDto,EmailDto.class);
+        emailDto.setRandomPassword(randomNum);
+        userService.updatePassword(userDto,emailDto);
+        userService.sendEmail(emailDto);
+        ResponseUser responseUser = mapper.map(userDto, ResponseUser.class);
+        return ResponseEntity.status(HttpStatus.OK).body(responseUser.getEmail());
     }
 
     /* admin 유저 목록 페이지 */
