@@ -41,7 +41,13 @@ export default function SignIn() {
           })
           .then((res) => {
             alert('로그인 성공')
-            navi('/MyPage',{state:{email:res.data.email, uid:res.headers.userid , userName:res.data.userName, Authorization: res.headers.accesstoken}});
+            if(res.data.email === 'admin') {
+              navi('/MypageAdmin',{state:{email:res.data.email, uid:res.headers.userid , userName:res.data.userName, Authorization: res.headers.accesstoken}})
+            }
+            else {
+              navi('/MyPage',{state:{email:res.data.email, uid:res.headers.userid , userName:res.data.userName, Authorization: res.headers.accesstoken}});
+            }
+            
           })
           .catch(() => {
             alert('아이디 또는 비밀번호가 틀렸습니다.');
@@ -101,7 +107,7 @@ export default function SignIn() {
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="#" variant="body2">
+                <Link href="./ForgetPassword" variant="body2">
                   Forgot password?
                 </Link>
               </Grid>

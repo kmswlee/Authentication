@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -29,31 +29,53 @@ const theme = createTheme();
 export default function MyPage(res) {
   const navi = useNavigate();
   const state = useLocation();
+  const [datas,setData] = useState([]);
+  console.log(state.state.Authorization)
   const config = {
     headers: {Authorization:`Bearer ${state.state.Authorization}`}
-  }
+  };
   const [value, setValue] = useState({
     email: state.state.email,
     userName: state.state.userName,
     uid: state.state.uid,
     authorization: state.state.Authorization
-})
-  const secess = async (e) => {
-      e.preventDefault();
-      await axios
-            .delete(`http://localhost:8000/user-service/users/${state.state.uid}`, config)
-            .then(() => {
-              alert('회원 탈퇴 하셨습니다.');
-              navi('/')
-            })
-            .catch(() => {
-              alert('회원 탈퇴를 실패하셨습니다.');
-            })
-  };
-  const modified = async (e) => {
-    e.preventDefault();
-    navi('/Modify',{state:{email:value.email, uid:value.uid, userName:value.userName, Authorization: value.authorization}})
-  };
+  });
+
+  useEffect(() => {
+    const userData = async () => {
+    await axios
+          .get('http://localhost:8000/user-service/admin/users',config)
+          .then((res) => {
+            setData(res.data)
+          })
+        };
+    userData();
+  },[]);
+
+  const userList = datas.map((item,idx) => (
+      <>
+      <Grid item xs={12}>
+        {item.email}
+      </Grid>
+      <Grid item xs={12}>
+        {item.userName}
+      </Grid>
+      <Button onClick={()=> ejection(item.userId)} variant="contained" sx={{ mt: 2, mb: 2 }}> 강퇴 </Button>
+      </>
+  ));
+
+  const ejection = async (uid) => {
+    await axios
+          .delete(`http://localhost:8000/user-service/admin/${uid}`, config)
+          .then(() => {
+            alert('강퇴 되었습니다.');
+            navi('/MyPageAdmin',{state:{email:value.email, uid:value.uid, userName:value.userName, Authorization: value.authorization}});
+          })
+          .catch(()=> {
+            alert('강퇴를 실패 하였습니다.');
+          })
+  }
+
   const logout = async (e) => {
     e.preventDefault();
     alert('로그아웃 되었습니다.');
@@ -76,37 +98,13 @@ export default function MyPage(res) {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            My Page
+            My Page Admin
           </Typography>
           <Box component="form" noValidate sx={{ mt: 3 }}>
-            <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  {value.email}
-                </Grid>
-                
-                <Grid item xs={12}>
-                   {value.userName}
-                </Grid>
-               
+            <Grid container spacing={1}>
+              {userList}
             </Grid>
-            <Button
-              onClick={modified}
-              // type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              정보수정
-            </Button>
-            <Button
-              onClick={secess}
-              // type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              탈퇴하기
-            </Button>
+            
             <Button
               onClick={logout}
               fullWidth
